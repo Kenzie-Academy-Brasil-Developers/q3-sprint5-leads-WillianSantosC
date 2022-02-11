@@ -13,7 +13,7 @@ def verify(data: dict):
         raise TypeError
 
     regex = r"(\(\d{2}\))(\d{5}\-\d{4})"
-    phone_verification = re.search(regex, data["phone"])
+    phone_verification = re.fullmatch(regex, data["phone"])
 
     if not phone_verification:
         raise ValueError
