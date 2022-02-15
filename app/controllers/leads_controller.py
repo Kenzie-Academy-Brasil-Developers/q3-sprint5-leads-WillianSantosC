@@ -7,23 +7,26 @@ import re
 
 from app.models.leads_model import Leads
 
-def verify(data: dict):
+def verify_phone(data: dict):
+  regex = r"(\(\d{2}\))(\d{5}\-\d{4})"
+  phone_verification = re.fullmatch(regex, data["phone"])
+
+  if not phone_verification:
+    raise ValueError
+
+def verify_type(data: dict):
     for value in list(data.values()):
       if type(value) != str:
         raise TypeError
 
-    regex = r"(\(\d{2}\))(\d{5}\-\d{4})"
-    phone_verification = re.fullmatch(regex, data["phone"])
-
-    if not phone_verification:
-        raise ValueError
 
 def create_lead():
     data = request.get_json()
     session: Session = current_app.db.session
 
     try:
-      verify(data)
+      verify_type(data)
+      verify_phone(data)
 
       new_data = {
       "name": data["name"], 
@@ -61,31 +64,33 @@ def update_lead():
     base_query = session.query(Leads)
 
     try:
-        verify(data)
+      verify_type(data)
 
-        email = data["email"]
-        lead = base_query.filter_by(email=email).one()
+      email = data["email"]
+      print(email)
+      lead = base_query.filter_by(email=email).one()
+      print(lead)
 
-        setattr(lead, "visits",( lead.__dict__["visits"] + 1))
-        setattr(lead, "last_visit", datetime.now())
+      setattr(lead, "visits",( lead.__dict__["visits"] + 1))
+      setattr(lead, "last_visit", datetime.now())
 
-        session.add(lead)
-        session.commit()
+      session.add(lead)
+      session.commit()
 
-        return "", 204
+      return "", 204
 
     except NoResultFound:
-        return jsonify(erro= "Nenhum dado encontrado"), 404
+      return jsonify(erro= "Nenhum dado encontrado"), 404
     except TypeError:
       return jsonify(erro= "Todos os valores enviados devem ser do tipo string"), 400
     except KeyError:
-        return {
-               "error": "chave incorreta",
-               "permitida": [
-               "email"
-               ],
-               "recebida(s)": list(data.keys())
-            }, 400
+      return {
+              "error": "chave incorreta",
+              "permitida": [
+              "email"
+              ],
+              "recebida(s)": list(data.keys())
+          }, 400
 
 
 def delete_lead():
@@ -94,18 +99,18 @@ def delete_lead():
     base_query = session.query(Leads)
 
     try:
-        verify(data)
-        
-        email = data["email"]
-        lead = base_query.filter_by(email=email).one()
+      verify_type(data)
+      
+      email = data["email"]
+      lead = base_query.filter_by(email=email).one()
 
-        session.delete(lead)
-        session.commit()
+      session.delete(lead)
+      session.commit()
 
-        return "", 204
+      return "", 204
 
     except NoResultFound:
-        return jsonify(erro= "Nenhum dado encontrado"), 404
+      return jsonify(erro= "Nenhum dado encontrado"), 404
     except TypeError:
       return jsonify(erro= "Todos os valores enviados devem ser do tipo string"), 400
     except KeyError:
@@ -124,7 +129,7 @@ def get_leads():
     leads = base_query.order_by(desc(Leads.visits)).all()
 
     if not leads:
-        return jsonify(erro= "Nenhum dado encontrado"), 404
+      return jsonify(erro= "Nenhum dado encontrado"), 404
 
     return jsonify(leads), 200
 
