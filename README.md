@@ -3,7 +3,7 @@
 Esta API não requer autenticação para acessá-la.
 
 REST
-Base url: https://kenzie-leads.herokuapp.com
+Base url: https://leads-rest-api.herokuapp.com
 
 ---
 
